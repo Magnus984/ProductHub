@@ -6,6 +6,9 @@ class Product(models.Model):
     description = models.TextField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    class Meta:
+        db_table = 'product'
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -14,6 +17,9 @@ class Category(models.Model):
         Product,
         related_name="categories"
         )
+    
+    class Meta:
+        db_table = 'category'
 
 
 class Review(models.Model):
@@ -27,3 +33,6 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name="reviews"
         )
+
+    class Meta:
+        db_table = 'review'

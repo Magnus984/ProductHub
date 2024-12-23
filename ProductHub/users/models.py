@@ -15,6 +15,9 @@ class Customer(models.Model):
         related_name="customer"
         )
 
+    class Meta:
+        db_table = 'customer'
+
 
 class Admin(models.Model):
     user = models.OneToOneField(
@@ -22,3 +25,6 @@ class Admin(models.Model):
         on_delete=models.CASCADE,
         related_name="admin"
         )
+
+    class Meta:
+        db_table = 'admin'

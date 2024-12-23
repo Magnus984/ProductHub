@@ -79,16 +79,16 @@ WSGI_APPLICATION = 'ProductHub.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    'mysql': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'producthub',
         'USER': 'root',
         'PASSWORD': 'windowsql',
         'HOST': 'localhost',
         'PORT': '3306',
+    },
+    'sqlite': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

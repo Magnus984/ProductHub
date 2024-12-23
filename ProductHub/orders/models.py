@@ -27,6 +27,8 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="orders"
         )
+    class Meta:
+        db_table = 'order'
 
 class OrderItem(models.Model):
     quantity = models.IntegerField()
@@ -41,3 +43,5 @@ class OrderItem(models.Model):
         on_delete=models.CASCADE,
         related_name="order_items"
         )
+    class Meta:
+        db_table = 'order_item'

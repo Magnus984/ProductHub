@@ -11,6 +11,8 @@ class Cart(models.Model):
         on_delete=models.CASCADE,
         related_name="carts"
         )
+    class Meta:
+        db_table = 'cart'
 
 class CartItem(models.Model):
     quantity = models.IntegerField()
@@ -26,3 +28,5 @@ class CartItem(models.Model):
         on_delete=models.CASCADE,
         related_name="cart_items"
         )
+    class Meta:
+        db_table = 'cart_item'
