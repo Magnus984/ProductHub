@@ -1,4 +1,7 @@
 from django.db import models
+#from ..products.models import Product
+from products.models import Product
+from users.models import Customer
 
 # Create your models here.
 class Order(models.Model):
@@ -20,7 +23,7 @@ class Order(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
     customer_id = models.ForeignKey(
-        'users.Customer',
+        Customer,
         on_delete=models.CASCADE,
         related_name="orders"
         )
@@ -34,7 +37,7 @@ class OrderItem(models.Model):
         related_name="order_items"
         )
     product_id = models.ForeignKey(
-        'products.Product',
+        Product,
         on_delete=models.CASCADE,
         related_name="order_items"
         )

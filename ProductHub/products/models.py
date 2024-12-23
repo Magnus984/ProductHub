@@ -12,7 +12,6 @@ class Category(models.Model):
     description = models.TextField(max_length=200)
     product_id = models.ManyToManyField(
         Product,
-        on_delete=models.CASCADE,
         related_name="categories"
         )
 
