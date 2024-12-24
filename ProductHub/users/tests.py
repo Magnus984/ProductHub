@@ -4,13 +4,18 @@ from rest_framework.test import APIClient
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
+#Get the user model
 User = get_user_model()
 
 class UserAuthTests(TestCase):
+    """Test user authentication.
+    """
     def setUp(self):
         self.client = APIClient()
 
     def test_register_customer(self):
+        """Test register customer.
+        """
         url = reverse('register-customer')
         data = {
             'username': 'customer1',
@@ -25,6 +30,8 @@ class UserAuthTests(TestCase):
         self.assertTrue(User.objects.filter(username='customer1').exists())
 
     def test_register_admin(self):
+        """Test register admin.
+        """
         url = reverse('register-admin')
         data = {
             'username': 'admin1',
@@ -39,6 +46,8 @@ class UserAuthTests(TestCase):
     
 
     def test_register_customer_existing_username(self):
+        """Test customer registration with existing username.
+        """
         User.objects.create_user(username='customer1', password='password123')
         url = reverse('register-customer')
         data = {
@@ -54,6 +63,8 @@ class UserAuthTests(TestCase):
         self.assertIn('username', response.data)
 
     def test_register_customer_existing_email(self):
+        """Test customer registration with existing email.
+        """
         User.objects.create_user(username='customer2', email='customer1@example.com', password='password123')
         url = reverse('register-customer')
         data = {
@@ -69,6 +80,8 @@ class UserAuthTests(TestCase):
         self.assertIn('email', response.data)
 
     def test_register_admin_existing_username(self):
+        """Test admin registration with existing username.
+        """
         User.objects.create_user(username='admin1', password='password123')
         url = reverse('register-admin')
         data = {
@@ -83,6 +96,8 @@ class UserAuthTests(TestCase):
         self.assertIn('username', response.data)
 
     def test_register_admin_existing_email(self):
+        """Test admin registration with existing email.
+        """
         User.objects.create_user(username='admin2', email='admin1@example.com', password='password123')
         url = reverse('register-admin')
         data = {
@@ -97,6 +112,8 @@ class UserAuthTests(TestCase):
         self.assertIn('email', response.data)
 
     def test_login_user(self):
+        """Test user login.
+        """
         user = User.objects.create_user(username='user1', password='password1234')
         url = reverse('login')
         data = {
@@ -107,6 +124,8 @@ class UserAuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_logout_user(self):
+        """Test user logout.
+        """
         user = User.objects.create_user(username='user2', password='password1236')
         self.client.login(username='user2', password='password1236')
         url = reverse('logout')

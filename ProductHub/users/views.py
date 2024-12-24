@@ -8,6 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 class RegisterCustomerView(APIView):
+    """Register customer view.
+    """
     def post(self, request):
         try:
             serializer = CustomerSerializer(data=request.data)
@@ -19,6 +21,8 @@ class RegisterCustomerView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RegisterAdminView(APIView):
+    """Register admin view.
+    """
     def post(self, request):
         try:
             serializer = AdminSerializer(data=request.data)
@@ -30,6 +34,8 @@ class RegisterAdminView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    """Login view.
+    """
     def post(self, request):
         try:
             username = request.data.get('username')
@@ -43,6 +49,8 @@ class LoginView(APIView):
         return Response({'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
+    """Logout view.
+    """
     def post(self, request):
         try:
             logout(request)
