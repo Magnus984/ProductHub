@@ -48,6 +48,18 @@ class LoginView(APIView):
             return Response({'message': f'User not logged in: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
+class GetCurrentUserView(APIView):
+    """Get current logged-in user view.
+    """
+    def get(self, request):
+        try:
+            if request.user.is_authenticated:
+                user = CustomUser.objects.get(username=request.user)
+                return Response({'username': user.username, 'email': user.email, 'residential_address': user.residential_address}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': f'User not found: {str(e)}'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
 class LogoutView(APIView):
     """Logout view.
     """
