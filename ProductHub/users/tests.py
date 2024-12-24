@@ -123,6 +123,15 @@ class UserAuthTests(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_get_current_user(self):
+        """Test get current user.
+        """
+        user = User.objects.create_user(username='user1', password='password1235')
+        self.client.login(username='user1', password='password1235')
+        url = reverse('current-user')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_logout_user(self):
         """Test user logout.
         """
