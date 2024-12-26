@@ -15,6 +15,8 @@ def order_list(request):
     """
     if request.method == 'GET':
         customer = request.user
+        print(f"Customer: {customer}, Type: {type(customer)}")  # Debugging
+
         if not isinstance(customer, User):
             return Response({'error': 'Invalid user'}, status=status.HTTP_403_FORBIDDEN)
         
