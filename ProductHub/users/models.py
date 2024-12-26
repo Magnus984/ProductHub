@@ -1,30 +1,22 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-# Create your models here.
+from django.db import models
 
-class CustomUser(AbstractUser):
-    residential_address = models.CharField(max_length=80, blank=True, null=True)
-    is_customer = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
+class User(AbstractUser):
+    ROLES = (
+        ('admin', 'Admin'),
+        ('customer', 'Customer'),
+    )
 
+    email = models.EmailField(unique=True)  # Use email as login field
+    role = models.CharField(max_length=10, choices=ROLES, default='customer')
+    phone = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True)
 
-class Customer(models.Model):
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name="customer"
-        )
-
-    class Meta:
-        db_table = 'customer'
-
-
-class Admin(models.Model):
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name="admin"
-        )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']  # Fields required when creating a superuser
 
     class Meta:
-        db_table = 'admin'
+        db_table = 'users'
+
+    def __str__(self):
+        return self.username
