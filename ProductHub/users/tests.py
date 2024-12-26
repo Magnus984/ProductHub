@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
@@ -44,7 +45,19 @@ class UserAuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(username='admin1').exists())
     
-
+    def test_login_user(self):
+        """Test user login."""
+        user = User.objects.create_user(username='user1', password='password1234')
+        url = reverse('token_obtain_pair')
+        data = {
+            'username': 'user1',
+            'password': 'password1234'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+    
     def test_register_customer_existing_username(self):
         """Test customer registration with existing username.
         """
@@ -111,32 +124,14 @@ class UserAuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
 
-    def test_login_user(self):
-        """Test user login.
-        """
-        user = User.objects.create_user(username='user1', password='password1234')
-        url = reverse('login')
-        data = {
-            'username': 'user1',
-            'password': 'password1234'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_current_user(self):
         """Test get current user.
         """
         user = User.objects.create_user(username='user1', password='password1235')
-        self.client.login(username='user1', password='password1235')
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
         url = reverse('current-user')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_logout_user(self):
-        """Test user logout.
-        """
-        user = User.objects.create_user(username='user2', password='password1236')
-        self.client.login(username='user2', password='password1236')
-        url = reverse('logout')
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'user1')

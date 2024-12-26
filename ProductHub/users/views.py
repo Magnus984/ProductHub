@@ -1,71 +1,48 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import get_user_model
 from .models import CustomUser, Customer, Admin
 from .serializers import CustomUserSerializer, CustomerSerializer, AdminSerializer
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+User = get_user_model()
+
 class RegisterCustomerView(APIView):
-    """Register customer view.
-    """
+    """Register customer view."""
     def post(self, request):
+        serializer = CustomerSerializer(data=request.data)
         try:
-            serializer = CustomerSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'message': 'Customer created successfully'}, status=status.HTTP_201_CREATED)
+                return Response({'message': 'Customer registered successfully'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'message': f'Customer not registered: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class RegisterAdminView(APIView):
-    """Register admin view.
-    """
+    """Register admin view."""
     def post(self, request):
+        serializer = AdminSerializer(data=request.data)
         try:
-            serializer = AdminSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'message': 'Admin user created successfully'}, status=status.HTTP_201_CREATED)
+                return Response({'message': 'Admin registered successfully'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'message': f'Admin not registered: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class LoginView(APIView):
-    """Login view.
-    """
-    def post(self, request):
-        try:
-            username = request.data.get('username')
-            password = request.data.get('password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return Response({'message': 'User logged in successfully'}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'message': f'User not logged in: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
 class GetCurrentUserView(APIView):
     """Get current logged-in user view.
     """
-    def get(self, request):
-        try:
-            if request.user.is_authenticated:
-                user = CustomUser.objects.get(username=request.user)
-                return Response({'username': user.username, 'email': user.email, 'residential_address': user.residential_address}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'message': f'User not found: {str(e)}'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'message': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
-class LogoutView(APIView):
-    """Logout view.
-    """
-    def post(self, request):
-        try:
-            logout(request)
-            return Response({'message': 'User logged out successfully'}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'message': f'User not logged out: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def get(self, request):
+        user = request.user
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

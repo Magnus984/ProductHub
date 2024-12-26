@@ -40,7 +40,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         """
         user = CustomUser.objects.create_user(**validated_data)
         customer = Customer.objects.create(user=user)
-        return customer
+        return user
 
 
 class AdminSerializer(serializers.ModelSerializer):
@@ -70,4 +70,4 @@ class AdminSerializer(serializers.ModelSerializer):
         """
         user = CustomUser.objects.create_user(**validated_data, is_admin=True)
         admin = Admin.objects.create(user=user)
-        return admin
+        return user
