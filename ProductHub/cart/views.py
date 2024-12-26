@@ -1,89 +1,92 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+
 from .models import Cart, CartItem
+from products.models import Product
 from .serializers import CartSerializer, CartItemSerializer
 
-# Cart Views
 @api_view(['GET', 'POST'])
-def cart_list(request):
+def cart_view(request):
     """
-    List all carts or create a new cart for a customer.
-    """
-    if request.method == 'GET':
-        carts = Cart.objects.all()
-        serializer = CartSerializer(carts, many=True)
-        return Response(serializer.data)
-    
-    elif request.method == 'POST':
-        serializer = CartSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def cart_detail(request, pk):
-    """
-    Retrieve, update, or delete a specific cart.
+    Handle viewing and creating a cart.
+    - GET: Retrieve the user's cart with items.
+    - POST: Add a new item to the cart.
     """
     try:
-        cart = Cart.objects.get(pk=pk)
-    except Cart.DoesNotExist:
-        return Response({'detail': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        if request.user.is_authenticated:
+            cart, created = Cart.objects.get_or_create(user=request.user)
+        else:
+            # Use session-based cart for unauthenticated users
+            session_key = request.session.session_key
+            if not session_key:
+                request.session.create()
+                session_key = request.session.session_key
+            cart, created = Cart.objects.get_or_create(session_key=session_key, user=None)
 
-    if request.method == 'GET':
-        serializer = CartSerializer(cart)
-        return Response(serializer.data)
-    
-    elif request.method == 'PUT':
-        serializer = CartSerializer(cart, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'GET':
+            serializer = CartSerializer(cart)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-    elif request.method == 'DELETE':
-        cart.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'POST':
+            product_id = request.data.get('product_id')
+            quantity = request.data.get('quantity', 1)
 
-# CartItem Views
-@api_view(['GET', 'POST'])
-def cart_item_list(request, cart_id):
-    """
-    List all items in a cart or create a new cart item.
-    """
-    if request.method == 'GET':
-        cart_items = CartItem.objects.filter(cart_id=cart_id)
-        serializer = CartItemSerializer(cart_items, many=True)
-        return Response(serializer.data)
-    
-    elif request.method == 'POST':
-        data = request.data
-        data['cart_id'] = cart_id
-        serializer = CartItemSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if not product_id:
+                return Response({'error': 'Product ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            if not created:
+                cart_item.quantity += int(quantity)
+                cart_item.save()
+
+            return Response({'message': 'Item added to cart'}, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 
 @api_view(['PUT', 'DELETE'])
-def cart_item_detail(request, cart_id, pk):
+def cart_item_detail(request, item_id):
     """
-    Update or delete a specific cart item.
+    Handle updating and deleting a cart item.
+    - PUT: Update the quantity of a cart item.
+    - DELETE: Remove a cart item.
     """
     try:
-        cart_item = CartItem.objects.get(pk=pk, cart_id=cart_id)
+        if request.user.is_authenticated:
+            cart_item = CartItem.objects.get(id=item_id, cart__user=request.user)
+        else:
+            session_key = request.session.session_key
+            if not session_key:
+                return Response({'error': 'No active session'}, status=status.HTTP_400_BAD_REQUEST)
+            cart_item = CartItem.objects.get(id=item_id, cart__session_key=session_key)
+
     except CartItem.DoesNotExist:
-        return Response({'detail': 'Cart item not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT':
-        serializer = CartItemSerializer(cart_item, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        quantity = request.data.get('quantity')
 
-    elif request.method == 'DELETE':
+        if quantity is None or int(quantity) <= 0:
+            return Response({'error': 'Invalid quantity'}, status=status.HTTP_400_BAD_REQUEST)
+
+        cart_item.quantity = int(quantity)
+        cart_item.save()
+        serializer = CartItemSerializer(cart_item)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == 'DELETE':
         cart_item.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Item removed from cart'}, status=status.HTTP_204_NO_CONTENT)
