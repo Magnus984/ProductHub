@@ -39,7 +39,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         """create user.
         """
         user = CustomUser.objects.create_user(**validated_data)
-        customer = Customer.objects.create(user=user)
+        customer = Customer.objects.create(user=user, is_customer=True)
         return user
 
 
