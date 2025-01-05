@@ -1,0 +1,21 @@
+# Ignore Python bytecode
+*.pyc
+__pycache__/
+
+# Ignore migrations cache
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Ignore virtual environment
+.venv/
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore database files
+*.sqlite3
+*.db
+
+# Ignore environment variables
+.env

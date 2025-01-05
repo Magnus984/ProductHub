@@ -5,19 +5,26 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderItemSerializer
+from utils.pagination import CustomPagination
+
+
 
 class OrderListCreateView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request):
         """Get all orders for the authenticated customer"""
         orders = Order.objects.filter(customer_id=request.user.customer)
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data)
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(orders,request)
+        serializer = OrderSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     @transaction.atomic
     def post(self, request):
         """Create a new order with order items"""
+        
         # Add customer to the order data
         order_data = request.data.copy()
         order_data['customer_id'] = request.user.customer.id

@@ -6,9 +6,11 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg
 from .models import Product, Category, Review
 from .serializers import ProductSerializer, CategorySerializer, ReviewSerializer
+from utils.pagination import CustomPagination
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+    pagination_class = CustomPagination
 
     def get(self, request):
         """Get all products with filtering, sorting, and search"""
@@ -55,8 +57,11 @@ class ProductListCreateView(APIView):
             if sort_field:
                 queryset = queryset.order_by(sort_field)
 
-        serializer = ProductSerializer(queryset, many=True)
-        return Response(serializer.data)
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = ProductSerializer(paginated_queryset, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         """Create a new product"""
@@ -71,7 +76,6 @@ class ProductListCreateView(APIView):
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class ProductDetailView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -111,12 +115,18 @@ class ProductDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ProductReviewView(APIView):
+    pagination_class = CustomPagination
+
     def get(self, request, pk):
         """Get all reviews for a specific product"""
         product = get_object_or_404(Product, pk=pk)
         reviews = Review.objects.filter(product_id=product)
-        serializer = ReviewSerializer(reviews, many=True)
-        return Response(serializer.data)
+        
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginated_reviews = paginator.paginate_queryset(reviews, request)
+        serializer = ReviewSerializer(paginated_reviews, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, pk):
         """Add a review to a product"""
@@ -127,13 +137,18 @@ class ProductReviewView(APIView):
             serializer.save(product_id=product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class CategoryListCreateView(APIView):
+    pagination_class = CustomPagination
+
     def get(self, request):
         """Get all categories"""
         categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data)
+        
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginated_categories = paginator.paginate_queryset(categories, request)
+        serializer = CategorySerializer(paginated_categories, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         """Create a new category"""
@@ -142,7 +157,6 @@ class CategoryListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class CategoryDetailView(APIView):
     def get_object(self, pk):
         return get_object_or_404(Category, pk=pk)
