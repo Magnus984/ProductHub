@@ -8,6 +8,7 @@ from .models import Product, Category, Review
 from .serializers import ProductSerializer, CategorySerializer, ReviewSerializer
 from utils.pagination import CustomPagination
 from users.permissions import IsAdmin, IsCustomer
+from rest_framework.permissions import IsAuthenticated
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -87,9 +88,9 @@ class ProductDetailView(APIView):
 
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAdmin]
+            self.permission_classes = [IsAuthenticated, IsAdmin]
         else:
-            self.permission_classes = [IsCustomer]
+            self.permission_classes = [IsAuthenticated, IsCustomer, IsAdmin]
         return super().get_permissions()
 
     def get_object(self, pk):
@@ -129,7 +130,7 @@ class ProductDetailView(APIView):
 
 class ProductReviewView(APIView):
     pagination_class = CustomPagination
-    permission_classes = [IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     def get(self, request, pk):
         """Get all reviews for a specific product"""
@@ -156,7 +157,7 @@ class CategoryListCreateView(APIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            self.permission_classes = [IsAdmin]
+            self.permission_classes = [IsAuthenticated, IsAdmin]
         return super().get_permissions()
 
     def get(self, request):
@@ -179,9 +180,9 @@ class CategoryListCreateView(APIView):
 class CategoryDetailView(APIView):
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
-            self.permission_classes = [IsAdmin]
+            self.permission_classes = [IsAuthenticated, IsAdmin]
         else:
-            self.permission_classes = [IsCustomer]
+            self.permission_classes = [IsAuthenticated, IsCustomer]
         return super().get_permissions()
 
     def get_object(self, pk):
