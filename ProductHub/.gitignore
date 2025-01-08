@@ -19,3 +19,6 @@ Thumbs.db
 
 # Ignore environment variables
 .env
+
+# Ignore media files
+media/
