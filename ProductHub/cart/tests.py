@@ -13,7 +13,8 @@ class CartTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='testuser',
-            password='testpassword'
+            password='testpassword',
+            is_customer=True
         )
         self.customer = Customer.objects.create(user=self.user)
         self.client.force_authenticate(user=self.user)
