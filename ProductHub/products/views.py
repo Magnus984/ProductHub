@@ -7,6 +7,7 @@ from django.db.models import Q, Avg
 from .models import Product, Category, Review
 from .serializers import ProductSerializer, CategorySerializer, ReviewSerializer
 from utils.pagination import CustomPagination
+from .utils import handle_product_exceptions, validate_product, validate_category, validate_product_image, validate_product_price, validate_product_review
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -63,19 +64,32 @@ class ProductListCreateView(APIView):
         serializer = ProductSerializer(paginated_queryset, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    @handle_product_exceptions
     def post(self, request):
         """Create a new product"""
+        # Validate product data
+        print("request.data", request.data)
+        validate_product_image(request.FILES.get('image'))
+
+
+        price = validate_product_price(request.data.get('price'))
+
         serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            product = serializer.save()
-            
-            # Handle categories
-            category_ids = request.data.get('category_ids', [])
-            if category_ids:
-                product.categories.set(category_ids)
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+
+
+        category_ids = request.data.get('category_ids', [])
+        if category_ids:
+            for category_id in category_ids:
+                validate_category(category_id)
+            product.categories.set(category_ids)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+
 class ProductDetailView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -128,15 +142,23 @@ class ProductReviewView(APIView):
         serializer = ReviewSerializer(paginated_reviews, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    @handle_product_exceptions
     def post(self, request, pk):
         """Add a review to a product"""
-        product = get_object_or_404(Product, pk=pk)
-        serializer = ReviewSerializer(data=request.data)
+        product = validate_product(pk)
         
-        if serializer.is_valid():
-            serializer.save(product_id=product)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        validate_product_review(
+            request.data.get('rating'),
+            request.data.get('comment')
+        )
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = serializer.save(product_id=product)
+
+
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
 class CategoryListCreateView(APIView):
     pagination_class = CustomPagination
 

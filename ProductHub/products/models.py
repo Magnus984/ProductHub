@@ -27,7 +27,7 @@ class Category(models.Model):
 class Review(models.Model):
     RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
 
-    rating = models.DecimalField(choices=RATING_CHOICES)
+    rating = models.IntegerField(choices=RATING_CHOICES)
     comment = models.TextField(max_length=200)
     created_at = models.DateTimeField(auto_now=True)
     product_id = models.ForeignKey(
