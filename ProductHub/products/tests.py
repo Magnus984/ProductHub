@@ -6,9 +6,24 @@ from django.urls import reverse
 from products.models import Product, Category, Review
 from django.core.files.uploadedfile import SimpleUploadedFile
 import os
+from users.models import Customer, Admin
+
+User = get_user_model()
 
 class ProductTests(APITestCase):
     def setUp(self):
+        self.user1 = User.objects.create_user(
+            username='testuser',
+            password='testpassword',
+            is_customer=True
+        )
+        self.customer = Customer.objects.create(user=self.user1)
+        self.user2 = User.objects.create_user(
+            username='testadmin',
+            password='testadminpassword',
+            is_admin=True
+        )
+        self.admin = Admin.objects.create(user=self.user2)
         self.electronics = Category.objects.create(
             name='Electronics',
             description='Electronic devices'
@@ -85,8 +100,10 @@ class ProductTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['items'][0]['name'], 'The Great Gatsby Poster')
 
+
     def test_create_product(self):
         """Test creating a new product"""
+        self.client.force_authenticate(user=self.user2)
         url = reverse('product-list-create')
         image_path = image_path = os.path.join(
             os.path.dirname(__file__),
@@ -111,6 +128,7 @@ class ProductTests(APITestCase):
 
     def test_get_product_detail(self):
         """Test retrieving a specific product"""
+        self.client.force_authenticate(user=self.user1)
         url = reverse('product-detail', args=[self.laptop.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -119,6 +137,7 @@ class ProductTests(APITestCase):
 
     def test_update_product(self):
         """Test updating a product"""
+        self.client.force_authenticate(user=self.user2)
         url = reverse('product-detail', args=[self.laptop.id])
         image_path = os.path.join(
             os.path.dirname(__file__),
@@ -145,6 +164,7 @@ class ProductTests(APITestCase):
 
     def test_delete_product(self):
         """Test deleting a product"""
+        self.client.force_authenticate(user=self.user2)
         url = reverse('product-detail', args=[self.laptop.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -152,6 +172,7 @@ class ProductTests(APITestCase):
 
     def test_get_product_reviews(self):
         """Test retrieving reviews for a specific product"""
+        self.client.force_authenticate(user=self.user1)
         url = reverse('product-review', args=[self.laptop.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -160,6 +181,7 @@ class ProductTests(APITestCase):
 
     def test_add_product_review(self):
         """Test adding a review to a product"""
+        self.client.force_authenticate(user=self.user1)
         url = reverse('product-review', args=[self.laptop.id])
         data = {
             'rating': 4,
