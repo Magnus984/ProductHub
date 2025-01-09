@@ -6,11 +6,11 @@ from django.db import transaction
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderItemSerializer
 from utils.pagination import CustomPagination
-
+from users.permissions import IsCustomer
 
 
 class OrderListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
     pagination_class = CustomPagination
 
     def get(self, request):
@@ -53,7 +53,7 @@ class OrderListCreateView(APIView):
         return Response(result_serializer.data, status=status.HTTP_201_CREATED)
 
 class OrderDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     def get(self, request, order_id):
         """Get a specific order"""
@@ -84,7 +84,7 @@ class OrderDetailView(APIView):
             )
 
 class OrderItemDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     def get(self, request, order_id):
         """Get all items for a specific order"""

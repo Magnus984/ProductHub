@@ -8,10 +8,17 @@ from .models import Product, Category, Review
 from .serializers import ProductSerializer, CategorySerializer, ReviewSerializer
 from utils.pagination import CustomPagination
 from .utils import handle_product_exceptions, validate_product, validate_category, validate_product_image, validate_product_price, validate_product_review
+from users.permissions import IsAdmin, IsCustomer
+from rest_framework.permissions import IsAuthenticated
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     pagination_class = CustomPagination
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            self.permission_classes = [IsAdmin]
+        return super().get_permissions()
 
     def get(self, request):
         """Get all products with filtering, sorting, and search"""
@@ -68,7 +75,6 @@ class ProductListCreateView(APIView):
     def post(self, request):
         """Create a new product"""
         # Validate product data
-        print("request.data", request.data)
         validate_product_image(request.FILES.get('image'))
 
 
@@ -92,6 +98,13 @@ class ProductListCreateView(APIView):
 
 class ProductDetailView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAuthenticated, IsAdmin]
+        else:
+            self.permission_classes = [IsAuthenticated, IsCustomer, IsAdmin]
+        return super().get_permissions()
 
     def get_object(self, pk):
         return get_object_or_404(Product, pk=pk)
@@ -130,6 +143,7 @@ class ProductDetailView(APIView):
 
 class ProductReviewView(APIView):
     pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     def get(self, request, pk):
         """Get all reviews for a specific product"""
@@ -162,6 +176,11 @@ class ProductReviewView(APIView):
 class CategoryListCreateView(APIView):
     pagination_class = CustomPagination
 
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            self.permission_classes = [IsAuthenticated, IsAdmin]
+        return super().get_permissions()
+
     def get(self, request):
         """Get all categories"""
         categories = Category.objects.all()
@@ -180,6 +199,13 @@ class CategoryListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class CategoryDetailView(APIView):
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'DELETE']:
+            self.permission_classes = [IsAuthenticated, IsAdmin]
+        else:
+            self.permission_classes = [IsAuthenticated, IsCustomer]
+        return super().get_permissions()
+
     def get_object(self, pk):
         return get_object_or_404(Category, pk=pk)
 

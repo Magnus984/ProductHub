@@ -6,10 +6,11 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 from .exceptions import CartItemNotFoundException
 from .utils import handle_cart_exceptions, validate_cart_item_quantity, validate_product
+from users.permissions import IsCustomer
 
 
 class CartView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     @handle_cart_exceptions
     def get(self, request):
@@ -21,7 +22,7 @@ class CartView(APIView):
         return Response(serializer.data)
 
 class CartItemView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     @handle_cart_exceptions
     @transaction.atomic
@@ -96,7 +97,7 @@ class CartItemView(APIView):
         return Response(serializer.data)
 
 class ClearCartView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCustomer]
 
     @handle_cart_exceptions
     @transaction.atomic
