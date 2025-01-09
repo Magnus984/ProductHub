@@ -109,12 +109,11 @@ class ProductListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class ProductDetailView(APIView):
     parser_classes = (MultiPartParser, FormParser)
-
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             self.permission_classes = [IsAuthenticated, IsAdmin]
         else:
-            self.permission_classes = [IsAuthenticated, IsCustomer, IsAdmin]
+            self.permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
         return super().get_permissions()
 
     def get_object(self, pk):
