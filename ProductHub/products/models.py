@@ -25,13 +25,16 @@ class Product(models.Model):
 
 
     @classmethod
-    def get_chached(cls, product_id):
+    def get_cached(cls, product_id):
         cache_key = f'product_{product_id}'
         product = cache.get(cache_key)
         if not product:
             product = cls.objects.get(id=product_id)
             cache.set(cache_key, product, timeout=3600)
         return product
+    
+    def __str__(self):
+        return self.name
 
 
 class Category(models.Model):
@@ -44,7 +47,8 @@ class Category(models.Model):
     
     class Meta:
         db_table = 'category'
-
+    
+    
 
 class Review(models.Model):
     RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]

@@ -195,7 +195,7 @@ class ProductDetailView(APIView):
 
 class ProductReviewView(APIView):
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
 
     @swagger_auto_schema(
         operation_description="Get all reviews for a specific product",
@@ -244,6 +244,7 @@ class CategoryListCreateView(APIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
+            print(f"{self.request.user.is_admin}")
             self.permission_classes = [IsAuthenticated, IsAdmin]
         return super().get_permissions()
     
