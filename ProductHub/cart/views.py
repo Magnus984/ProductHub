@@ -6,14 +6,13 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 from .exceptions import CartItemNotFoundException
 from .utils import handle_cart_exceptions, validate_cart_item_quantity, validate_product
-from users.permissions import IsCustomer
-from users.permissions import IsCustomer
+from users.permissions import IsCustomer, IsAdmin
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
 class CartView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer|IsAdmin]
 
     @swagger_auto_schema(
         operation_description="Get user's cart or create if doesn't exist",
@@ -30,7 +29,7 @@ class CartView(APIView):
 
 
 class AddCartItemView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
 
     @swagger_auto_schema(
         operation_description="Add item to cart",
@@ -134,7 +133,7 @@ class CartItemDetailView(APIView):
 
 
 class ClearCartView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
 
     @swagger_auto_schema(
         operation_description="Clear all items from cart",
