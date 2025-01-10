@@ -20,6 +20,9 @@ class Customer(models.Model):
     class Meta:
         db_table = 'customer'
 
+    def __str__(self):
+        return self.user.username
+
 
 class Admin(models.Model):
     """Admin model."""
@@ -31,3 +34,6 @@ class Admin(models.Model):
 
     class Meta:
         db_table = 'admin'
+
+    def __str__(self):
+        return self.user.username
