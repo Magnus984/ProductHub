@@ -11,6 +11,7 @@ from users.permissions import IsAdmin, IsCustomer
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from .utils import validate_product_image, validate_product_price, validate_category, validate_product, validate_product_review
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -96,17 +97,28 @@ class ProductListCreateView(APIView):
     )
     def post(self, request):
         """Create a new product"""
+        # Validate product data
+        validate_product_image(request.FILES.get('image'))
+
+
+        price = validate_product_price(request.data.get('price'))
+
         serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            product = serializer.save()
-            
-            # Handle categories
-            category_ids = request.data.get('category_ids', [])
-            if category_ids:
-                product.categories.set(category_ids)
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+
+
+        category_ids = request.data.get('category_ids', [])
+        if category_ids:
+            for category_id in category_ids:
+                validate_category(category_id)
+            product.categories.set(category_ids)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+
 class ProductDetailView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     def get_permissions(self):
@@ -114,6 +126,13 @@ class ProductDetailView(APIView):
             self.permission_classes = [IsAuthenticated, IsAdmin]
         else:
             self.permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
+        return super().get_permissions()
+
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAuthenticated, IsAdmin]
+        else:
+            self.permission_classes = [IsAuthenticated, IsCustomer, IsAdmin]
         return super().get_permissions()
 
     def get_object(self, pk):
@@ -176,7 +195,7 @@ class ProductDetailView(APIView):
 
 class ProductReviewView(APIView):
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
 
     @swagger_auto_schema(
         operation_description="Get all reviews for a specific product",
@@ -206,18 +225,26 @@ class ProductReviewView(APIView):
     )
     def post(self, request, pk):
         """Add a review to a product"""
-        product = get_object_or_404(Product, pk=pk)
-        serializer = ReviewSerializer(data=request.data)
+        product = validate_product(pk)
         
-        if serializer.is_valid():
-            serializer.save(product_id=product)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        validate_product_review(
+            request.data.get('rating'),
+            request.data.get('comment')
+        )
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = serializer.save(product_id=product)
+
+
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
 class CategoryListCreateView(APIView):
     pagination_class = CustomPagination
 
     def get_permissions(self):
         if self.request.method == 'POST':
+            print(f"{self.request.user.is_admin}")
             self.permission_classes = [IsAuthenticated, IsAdmin]
         return super().get_permissions()
     
