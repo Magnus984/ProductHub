@@ -40,7 +40,10 @@ class OrderTests(APITestCase):
         """Test retrieving all orders for the authenticated customer"""
         url = reverse('order-list-create')
         response = self.client.get(url)
+<<<<<<< HEAD
         print("response data: ", response.data)
+=======
+>>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('items', response.data)
         self.assertGreater(len(response.data['items']), 0)

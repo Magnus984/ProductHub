@@ -7,12 +7,21 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderItemSerializer
 from utils.pagination import CustomPagination
 from users.permissions import IsCustomer
+<<<<<<< HEAD
+=======
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+>>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
 
 
 class OrderListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
     pagination_class = CustomPagination
 
+    @swagger_auto_schema(
+        operation_description="Get all orders for the authenticated customer",
+        tags=['Orders']
+    )
     def get(self, request):
         """Get all orders for the authenticated customer"""
         orders = Order.objects.filter(customer_id=request.user.customer)
@@ -21,6 +30,29 @@ class OrderListCreateView(APIView):
         serializer = OrderSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    @swagger_auto_schema(
+        operation_description="Create a new order with order items",
+        tags=['Orders'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Order status'),
+                'total': openapi.Schema(type=openapi.TYPE_NUMBER, format='float', description='Total amount'),
+                'currency': openapi.Schema(type=openapi.TYPE_STRING, description='Currency'),
+                'order_items': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Quantity'),
+                            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format='float', description='Price'),
+                            'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Product ID')
+                        }
+                    )
+                )
+            }
+        )
+    )
     @transaction.atomic
     def post(self, request):
         """Create a new order with order items"""
@@ -55,6 +87,10 @@ class OrderListCreateView(APIView):
 class OrderDetailView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
 
+    @swagger_auto_schema(
+        operation_description="Get a specific order",
+        tags=['Orders']
+    )
     def get(self, request, order_id):
         """Get a specific order"""
         try:
@@ -67,6 +103,16 @@ class OrderDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @swagger_auto_schema(
+        operation_description="Update order status",
+        tags=['Orders'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Order status')
+            }
+        )
+    )
     @transaction.atomic
     def patch(self, request, order_id):
         """Update order status"""
@@ -86,6 +132,10 @@ class OrderDetailView(APIView):
 class OrderItemDetailView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
 
+    @swagger_auto_schema(
+        operation_description="Get all items for a specific order",
+        tags=['Orders']
+    )
     def get(self, request, order_id):
         """Get all items for a specific order"""
         try:
