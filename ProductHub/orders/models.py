@@ -98,7 +98,7 @@ class Order(models.Model):
                     price = cart_item.product_id.price
                 )
 
-                Product.objects.filter(id=cart_item.product_id.id).update(stock=F('stock')-cart_item.quantity)
+                Product.objects.filter(id=cart_item.product_id.id).update(stock=models.F('stock') - cart_item.quantity)
 
                 OrderStatusHistory.objects.create(order=order, status='pending', notes='Order created from cart')
         return order

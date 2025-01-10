@@ -11,6 +11,7 @@ from users.permissions import IsAdmin, IsCustomer
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from .utils import validate_product_image, validate_product_price, validate_category, validate_product, validate_product_review
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
