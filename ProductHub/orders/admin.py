@@ -3,7 +3,7 @@ from .models import Order, OrderItem
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'order_date', 'total', 'currency', 'customer_id')
+    list_display = ('id', 'status', 'order_date', 'original_total', 'currency', 'customer_id')
     search_fields = ('status', 'customer_id__user__username')
     list_filter = ('status', 'currency', 'order_date')
 
