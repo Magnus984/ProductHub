@@ -7,11 +7,18 @@ from .serializers import CartSerializer, CartItemSerializer
 from .exceptions import CartItemNotFoundException
 from .utils import handle_cart_exceptions, validate_cart_item_quantity, validate_product
 from users.permissions import IsCustomer
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from users.permissions import IsCustomer
 
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
 
+    @swagger_auto_schema(
+        operation_description="Get user's cart or create if doesn't exist",
+        tags=['Cart']
+    )
     @handle_cart_exceptions
     def get(self, request):
         """Get user's cart or create if doesn't exist"""
@@ -21,9 +28,21 @@ class CartView(APIView):
         serializer = CartSerializer(cart)
         return Response(serializer.data)
 
-class CartItemView(APIView):
+
+class AddCartItemView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
 
+    @swagger_auto_schema(
+        operation_description="Add item to cart",
+        tags=['Cart'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Product ID'),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Quantity', default=1)
+            }
+        )
+    )
     @handle_cart_exceptions
     @transaction.atomic
     def post(self, request):
@@ -56,6 +75,19 @@ class CartItemView(APIView):
         serializer = CartSerializer(cart)
         return Response(serializer.data)
 
+class CartItemDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsCustomer]
+
+    @swagger_auto_schema(
+        operation_description="Update cart item quantity",
+        tags=['Cart'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Quantity')
+            }
+        )
+    )
     @handle_cart_exceptions
     @transaction.atomic
     def put(self, request, item_id):
@@ -78,6 +110,10 @@ class CartItemView(APIView):
         serializer = CartSerializer(cart_item.cart_id)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        operation_description="Remove item from cart",
+        tags=['Cart']
+    )
     @handle_cart_exceptions
     @transaction.atomic
     def delete(self, request, item_id):
@@ -96,9 +132,14 @@ class CartItemView(APIView):
         serializer = CartSerializer(cart)
         return Response(serializer.data)
 
+
 class ClearCartView(APIView):
     permission_classes = [IsAuthenticated, IsCustomer]
 
+    @swagger_auto_schema(
+        operation_description="Clear all items from cart",
+        tags=['Cart']
+    )
     @handle_cart_exceptions
     @transaction.atomic
     def post(self, request):
