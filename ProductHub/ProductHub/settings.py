@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     'orders',
     'cart',
 
-    'drf_yasg'
 ]
 
 SWAGGER_SETTINGS = {

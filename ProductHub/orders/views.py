@@ -7,11 +7,8 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderItemSerializer
 from utils.pagination import CustomPagination
 from users.permissions import IsCustomer
-<<<<<<< HEAD
-=======
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
 
 
 class OrderListCreateView(APIView):

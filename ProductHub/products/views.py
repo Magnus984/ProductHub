@@ -7,16 +7,10 @@ from django.db.models import Q, Avg
 from .models import Product, Category, Review
 from .serializers import ProductSerializer, CategorySerializer, ReviewSerializer
 from utils.pagination import CustomPagination
-<<<<<<< HEAD
-from .utils import handle_product_exceptions, validate_product, validate_category, validate_product_image, validate_product_price, validate_product_review
-from users.permissions import IsAdmin, IsCustomer
-from rest_framework.permissions import IsAuthenticated
-=======
 from users.permissions import IsAdmin, IsCustomer
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
 
 class ProductListCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -27,8 +21,6 @@ class ProductListCreateView(APIView):
             self.permission_classes = [IsAdmin]
         return super().get_permissions()
 
-<<<<<<< HEAD
-=======
     @swagger_auto_schema(
         operation_description="Get all products",
         tags=["Products"],
@@ -40,7 +32,6 @@ class ProductListCreateView(APIView):
             openapi.Parameter('sort', openapi.IN_QUERY, description="Sort order", type=openapi.TYPE_STRING)
         ]
     )
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
     def get(self, request):
         """Get all products with filtering, sorting, and search"""
         queryset = Product.objects.all()
@@ -92,9 +83,6 @@ class ProductListCreateView(APIView):
         serializer = ProductSerializer(paginated_queryset, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-<<<<<<< HEAD
-    @handle_product_exceptions
-=======
     @swagger_auto_schema(
         operation_description="Create a new product",
         tags=["Products"],
@@ -106,7 +94,6 @@ class ProductListCreateView(APIView):
             openapi.Parameter('categories', openapi.IN_FORM, description="Categories", type=openapi.TYPE_STRING, required=True)
         ]
     )
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
     def post(self, request):
         """Create a new product"""
         # Validate product data
@@ -224,9 +211,6 @@ class ProductReviewView(APIView):
         serializer = ReviewSerializer(paginated_reviews, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-<<<<<<< HEAD
-    @handle_product_exceptions
-=======
     @swagger_auto_schema(
         operation_description="Add a review to a product",
         tags=["Reviews"],
@@ -238,7 +222,6 @@ class ProductReviewView(APIView):
             }
         )
     )
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
     def post(self, request, pk):
         """Add a review to a product"""
         product = validate_product(pk)
@@ -262,15 +245,11 @@ class CategoryListCreateView(APIView):
         if self.request.method == 'POST':
             self.permission_classes = [IsAuthenticated, IsAdmin]
         return super().get_permissions()
-<<<<<<< HEAD
-
-=======
     
     @swagger_auto_schema(
         operation_description="Get all categories",
         tags=["Categories"]
     )
->>>>>>> a7205d9e0fdc428f0d172764d638867e3797ea1e
     def get(self, request):
         """Get all categories"""
         categories = Category.objects.all()
