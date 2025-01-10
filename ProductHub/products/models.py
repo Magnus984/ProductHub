@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.cache import cache
 
 # Create your models here.
 class Product(models.Model):
@@ -6,10 +7,31 @@ class Product(models.Model):
     description = models.TextField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='uploads/products/')
+    stock = models.PositiveIntegerField(default=0)
+    max_quantity_per_order = models.PositiveIntegerField(default=10)
+    is_active = models.BooleanField(default=True)
     
 
     class Meta:
         db_table = 'product'
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['price']),
+        ]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete(f'product_{self.id}')
+
+
+    @classmethod
+    def get_chached(cls, product_id):
+        cache_key = f'product_{product_id}'
+        product = cache.get(cache_key)
+        if not product:
+            product = cls.objects.get(id=product_id)
+            cache.set(cache_key, product, timeout=3600)
+        return product
 
 
 class Category(models.Model):
