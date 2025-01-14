@@ -16,7 +16,8 @@ class CartView(APIView):
 
     @swagger_auto_schema(
         operation_description="Get user's cart or create if doesn't exist",
-        tags=['Cart']
+        tags=['Cart'],
+        responses={200: CartSerializer}
     )
     @handle_cart_exceptions
     def get(self, request):
