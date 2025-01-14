@@ -21,12 +21,14 @@ class CartTests(APITestCase):
         self.product = Product.objects.create(
             name='Product_0',
             description="Test Product",
-            price=10.0
+            price=10.0,
+            stock=10,
+            max_quantity_per_order=2
             )
         self.second_product = Product.objects.create(
             name='Product_1',
             description="Test Product",
-            price=10.0
+            price=10.0,
             )
 
     def test_get_cart(self):
