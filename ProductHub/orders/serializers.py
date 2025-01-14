@@ -13,7 +13,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'status', 'order_date', 'total', 'currency', 'customer_id', 'order_items', 'discount_amount', 'original_total']
-        read_only_fields = ['id', 'status', 'order_date', 'total', 'customer_id', 'discount_amount', 'original_total']
+        read_only_fields = ['id', 'order_date', 'total', 'customer_id', 'discount_amount', 'original_total']
         extra_kwargs = {
             'currency': {'required': False}
         }
