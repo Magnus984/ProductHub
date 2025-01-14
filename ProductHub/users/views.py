@@ -18,6 +18,7 @@ class RegisterCustomerView(APIView):
     @swagger_auto_schema(
         operation_description="Registers a customer",
         tags=['Users'],
+        responses={200: CustomerSerializer},
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -45,6 +46,7 @@ class RegisterAdminView(APIView):
     @swagger_auto_schema(
         operation_description="Registers an admin",
         tags=['Users'],
+        responses={200: AdminSerializer},
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
