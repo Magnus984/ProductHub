@@ -128,13 +128,6 @@ class ProductDetailView(APIView):
             self.permission_classes = [IsAuthenticated, IsCustomer | IsAdmin]
         return super().get_permissions()
 
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAuthenticated, IsAdmin]
-        else:
-            self.permission_classes = [IsAuthenticated, IsCustomer, IsAdmin]
-        return super().get_permissions()
-
     def get_object(self, pk):
         return get_object_or_404(Product, pk=pk)
 
