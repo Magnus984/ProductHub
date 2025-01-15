@@ -273,6 +273,7 @@ class CategoryListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class CategoryDetailView(APIView):
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
