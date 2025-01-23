@@ -9,6 +9,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from orders.views import paystack_webhook 
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -39,6 +40,7 @@ urlpatterns = [
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('webhook/paystack/', paystack_webhook, name='paystack_webhook'),
     path('api/v1/',
         include([
             path('products/', include('products.urls')),
