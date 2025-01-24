@@ -149,6 +149,7 @@ class ProductDetailView(APIView):
             openapi.Parameter('description', openapi.IN_FORM, description="Description", type=openapi.TYPE_STRING, required=False),
             openapi.Parameter('price', openapi.IN_FORM, description="Price", type=openapi.TYPE_NUMBER, format='float', required=False),
             openapi.Parameter('image', openapi.IN_FORM, description="Image", type=openapi.TYPE_FILE, required=False),
+            openapi.Parameter('stock', openapi.IN_FORM, description="Stock", type=openapi.TYPE_NUMBER, required=False),
             openapi.Parameter('categories', openapi.IN_FORM, description="Categories", type=openapi.TYPE_STRING, required=False)
         ]
     )

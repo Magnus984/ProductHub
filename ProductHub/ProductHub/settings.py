@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-7$+i#_ad@^3s=yga8#67hlr^i3hp!s%dnjbocwk%$9wp*jmev%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'e149-129-222-206-80.ngrok-free.app']
 
 
 # Application definition
@@ -189,3 +189,5 @@ SWAGGER_SETTINGS = {
         'patch'
     ],
 }
+EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
+PAYSTACK_LIVE_SECRET_KEY = os.getenv('PAYSTACK_LIVE_SECRET_KEY')

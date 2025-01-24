@@ -25,6 +25,7 @@ class Order(models.Model):
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('delivered', 'Delivered'),
+        ('paid', 'Paid'),
         ('cancelled', 'Cancelled'),
     ]
 
@@ -36,16 +37,18 @@ class Order(models.Model):
     ]
 
     VALID_STATUS_TRANSITIONS = {
-        'pending': ['processing', 'cancelled'],
+        'pending': ['processing', 'cancelled', 'paid'],
         'processing': ['delivered', 'cancelled'],
         'delivered': [],
-        'cancelled': []
+        'cancelled': [],
+        'paid': []
     }
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     order_date = models.DateTimeField(auto_now=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
+    reference = models.CharField(max_length=50, blank=True)
     customer_id = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,

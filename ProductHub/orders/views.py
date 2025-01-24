@@ -11,6 +11,16 @@ from users.permissions import IsCustomer, IsAdmin
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import ValidationError
+from users.models import Customer
+import json 
+from django.shortcuts import get_object_or_404
+from django.conf import settings
+import requests
+from .utils import verify_paystack_payment
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+import hmac
+import hashlib
 
 
 class OrderListCreateView(APIView):
@@ -197,3 +207,86 @@ class OrderItemDetailView(APIView):
                 {"error": "Order not found"}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class CheckoutOrder(APIView):
+    """checks out order"""
+    permission_classes = [IsAuthenticated, IsCustomer]
+
+    @swagger_auto_schema(
+        operation_description="Checks out and order by making payment",
+        tags=["Orders"],
+    )
+    def post(self, request, order_id):
+        #getting order using order_id
+        order = get_object_or_404(Order, id=order_id)
+        customer = Customer.objects.get(id=order.customer_id.id)
+        total = int(order.total * 100) #converting to smallest currency unit
+
+        #initializing payment
+        url = "https://api.paystack.co/transaction/initialize"
+
+        PAYSTACK_SECRET_KEY = settings.PAYSTACK_LIVE_SECRET_KEY
+        print(PAYSTACK_SECRET_KEY)
+        data = {
+            "email": customer.user.email,
+            "amount": total,
+        }
+        headers = {
+            "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(url=url, data=json.dumps(data), headers=headers)
+        response_data = response.json()
+        print(response_data)
+        if response.status_code != 200:
+            return Response({"error": "Payment initialization failed"}, status=status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        print(response_data)
+        reference = response_data['data']['reference']
+        order.reference = reference
+        order.save()
+        return Response(
+            {"message": "Payment initialized", "authorization_url": response_data['data']['authorization_url']},
+            status=status.HTTP_200_OK
+        )
+
+
+@csrf_exempt
+@api_view(["POST"])
+def paystack_webhook(request):
+    secret_key = settings.PAYSTACK_LIVE_SECRET_KEY
+    payload = request.body
+    signature = request.headers.get('X-Paystack-Signature')
+
+    if not signature:
+        return Response({"error": "Missing signature header"}, status=400)
+
+    # Verify the signature
+    generated_signature = hmac.new(
+        bytes(secret_key, 'utf-8'),
+        payload,
+        hashlib.sha512
+    ).hexdigest()
+
+    if generated_signature != signature:
+        return Response({"error": "Invalid signature"}, status=400)
+
+    # Parse and handle the event
+    event = json.loads(payload)
+    if event['event'] == 'charge.success':
+        data = event['data']
+        reference = data['reference']
+
+        # Find the order by reference and update its status
+        try:
+            order = Order.objects.get(reference=reference)
+            if order.status != 'paid':
+                order.status = 'paid'
+                order.save()
+            return Response({"message": "Payment verified"}, status=200)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+
+    return Response({"message": "Unhandled event"}, status=200)
